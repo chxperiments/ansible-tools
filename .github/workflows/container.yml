@@ -11,8 +11,10 @@ on:
       - main
 
 env:
-  REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  REGISTRY_GHCR: ghcr.io
+  REGISTRY_QUAY: quay.io
+  REGISTRY_DOCKERHUB: docker.io
 
 jobs:
   build:
@@ -29,19 +31,14 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.REGISTRY_GHCR }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY_QUAY }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY_DOCKERHUB }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -49,6 +46,30 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha,format=short
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_GHCR }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Quay
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_QUAY }}
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_DOCKERHUB }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
         id: build
@@ -78,14 +99,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build image locally for scanning
         uses: docker/build-push-action@v6
         with:
@@ -96,30 +109,18 @@ jobs:
           tags: scan-target:latest
           cache-from: type=gha
 
-      - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.30.0
+      - name: Anchore Grype vulnerability scan
+        uses: anchore/scan-action@v3
         with:
-          image-ref: scan-target:latest
-          format: sarif
-          output: trivy-results.sarif
-          exit-code: "0"
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
+          image: scan-target:latest
+          severity-cutoff: high
+          fail-build: false
+          output-format: sarif
+          output-file: grype-results.sarif
 
-      - name: Upload Trivy SARIF to GitHub Security
+      - name: Upload Anchore SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: trivy-results.sarif
-          category: trivy
-
-      - name: Run Trivy scan (table output for log)
-        uses: aquasecurity/trivy-action@0.30.0
-        with:
-          image-ref: scan-target:latest
-          format: table
-          exit-code: "0"
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
+          sarif_file: grype-results.sarif
+          category: anchore-grype
