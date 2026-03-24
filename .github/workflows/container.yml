@@ -150,8 +150,13 @@ jobs:
           image: scan-target:latest
           severity-cutoff: high
           fail-build: false
-          output-format: sarif
-          output-file: grype-results.sarif
+
+      - name: Export SARIF from Grype
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            anchore/grype:latest \
+            scan-target:latest -o sarif > grype-results.sarif || true
 
       - name: Upload Anchore SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
