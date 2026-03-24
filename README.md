@@ -6,6 +6,3 @@ Build locally with `docker build -t ansible-tools .` then run with `docker run -
 
 ## Tools in the image
 Ansible CLI and ansible-lint from requirements.txt, ansible-galaxy with community.general and community.crypto collections, Python 3.10 userland, and helper binaries git, curl, and jq.
-
-## Latest vulnerability scan
-Anchore Grype CI scan on commit 004dbbc reported high-severity findings (build non-blocking); SARIF upload is skipped on pull_request events and will publish on the next non-PR run.
