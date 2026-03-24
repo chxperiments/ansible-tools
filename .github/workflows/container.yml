@@ -48,7 +48,8 @@ jobs:
         run: docker run --rm test-target:latest ansible-lint --version
 
       - name: Verify installed collections
-        run: docker run --rm test-target:latest ansible-galaxy collection list community.general community.crypto
+        run: |
+          docker run --rm test-target:latest /bin/sh -c "set -e; for col in community.general community.crypto; do ansible-galaxy collection list | grep -q \"${col}\"; done"
 
   build:
     name: Build
