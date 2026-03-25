@@ -11,7 +11,8 @@ on:
       - main
 
 env:
-  IMAGE_NAME: ${{ github.repository.name }}
+  IMAGE_NAME: ${{ github.event.repository.name }}
+  GH_IMAGE_NAME: ${{ github.repository.name }}
   REGISTRY_GHCR: ghcr.io
   REGISTRY_QUAY: quay.io
   REGISTRY_DOCKERHUB: docker.io
@@ -71,7 +72,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY_GHCR }}/${{ env.GH_IMAGE_NAME }}
             ${{ env.REGISTRY_QUAY }}/${{ secrets.QUAY_USERNAME }}/${{ env.IMAGE_NAME }}
             ${{ env.REGISTRY_DOCKERHUB }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
           tags: |
