@@ -12,6 +12,7 @@ on:
 
 env:
   IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME_DOCKERHUB: ${{ github.event.repository.name }}
   REGISTRY_GHCR: ghcr.io
   REGISTRY_QUAY: quay.io
   REGISTRY_DOCKERHUB: docker.io
@@ -73,7 +74,7 @@ jobs:
           images: |
             ${{ env.REGISTRY_GHCR }}/${{ env.IMAGE_NAME }}
             ${{ env.REGISTRY_QUAY }}/${{ env.IMAGE_NAME }}
-            ${{ env.REGISTRY_DOCKERHUB }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY_DOCKERHUB }}/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
