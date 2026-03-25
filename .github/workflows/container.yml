@@ -12,6 +12,7 @@ on:
 
 env:
   IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME_DOCKERHUB: ${{ github.event.repository.name }}
   REGISTRY_GHCR: ghcr.io
   REGISTRY_QUAY: quay.io
   REGISTRY_DOCKERHUB: docker.io
@@ -145,7 +146,7 @@ jobs:
           cache-from: type=gha
 
       - name: Anchore Grype vulnerability scan
-        uses: anchore/scan-action@v3
+        uses: anchore/scan-action@v7
         with:
           image: scan-target:latest
           severity-cutoff: high
